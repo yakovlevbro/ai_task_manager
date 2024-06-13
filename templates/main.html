@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Добро пожаловать!</h1>
+    <!-- Пример содержания -->
+    <div class="card">
+        <div class="card-body">
+            Это ваша главная страница. Здесь может быть ваш контент.
+        </div>
+    </div>
+    <a href="{% url 'add_project' %}" class="btn btn-primary">Добавить проект</a></div>
+{% endblock %}

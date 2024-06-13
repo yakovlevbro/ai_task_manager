@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Project</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        .chat-container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 20px;
+            max-width: 100%;
+            overflow-x: hidden;
+            word-wrap: break-word;
+        }
+
+        .message {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background-color: #DCF8C6;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: #F8F4C6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="mb-4">Добавить проект</h1>
+
+    <form id="project-form" method="post">
+        {% csrf_token %}
+
+        <!-- Формы для ввода ответов на вопросы -->
+         <!-- Вопрос 1 -->
+        <div class="form-group">
+                <label for="question1">Вопрос 1: Какие именно функции должны быть реализованы на проекте? Какие возможности будут предоставлены пользователям?</label>
+                <input type="text" class="form-control" id="question1" name="question1" placeholder="Введите ответ">
+            </div>
+         <!-- Вопрос 2 -->
+        <div class="form-group">
+            <label for="question2">
+                Вопрос 2: Как будем отслеживать количество зарегистрированных пользователей? Каков будет план маркетинговых мероприятий для достижения этой цели?
+            </label>
+            <input type="text" class="form-control" id="question2" name="question2" placeholder="Введите ответ">
+        </div>
+
+        <!-- Вопрос 3 -->
+        <div class="form-group">
+            <label for="question3">
+                Вопрос 3: Какие ресурсы нам потребуются для разработки и запуска базовой версии платформы? Реально ли это сделать за указанный срок?
+            </label>
+            <input type="text" class="form-control" id="question3" name="question3" placeholder="Введите ответ">
+        </div>
+
+        <!-- Вопрос 4 -->
+        <div class="form-group">
+            <label for="question4">
+                Вопрос 4: Какие конкретные категории навыков и знаний будут доступны на платформе? Как это соответствует потребностям целевой аудитории?
+            </label>
+            <input type="text" class="form-control" id="question4" name="question4" placeholder="Введите ответ">
+        </div>
+
+        <!-- Вопрос 5 -->
+        <div class="form-group">
+            <label for="question5">
+                Вопрос 5: Какие этапы разработки платформы должны быть завершены к определенным датам? Какой график работы у нашей команды разработчиков?
+            </label>
+            <input type="text" class="form-control" id="question5" name="question5" placeholder="Введите ответ">
+        </div>
+
+        <!-- Вопрос 6 -->
+        <div class="form-group">
+            <label for="question6">
+                Вопрос 6*: Опишите команду, которая будет вести работу над этим проектом(роли, область работы, имена)?
+            </label>
+            <input type="text" class="form-control" id="question6" name="question6" placeholder="Введите ответ">
+        </div>
+
+        <!-- Кнопка отправки запроса -->
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Отправить запрос</button>
+            <button type="button" class="btn btn-secondary" onclick="goBack()">Назад</button>
+        </div>
+    </form>
+
+    <div class="chat-container mt-4" id="chat-response">
+        <div class="message bot-message">Результат: Здесь появится ответ</div>
+    </div>
+</div>
+
+<!-- Подключение Bootstrap и JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function(){
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        }
+    });
+    $('#project-form').submit(function(event){
+        event.preventDefault();
+
+        var formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: '/ai_mockup/add_project/',
+            data: formData,
+            success: function(response){
+                var index = 0;
+                var interval = setInterval(function(){
+                    if (response[index] == '\n') {
+                        $('#chat-response').append('<br>');
+                    } else {
+                        $('#chat-response').append(response[index]);
+                    }
+                    index++;
+                    if (index === response.length) {
+                        clearInterval(interval);
+
+                        $('#chat-response').after('<div class="mt-4" id="buttons-container">' +
+                            '<button type="button" class="btn btn-primary mr-2" id="add-info-btn">Добавить информацию</button>' +
+                            '<button type="button" class="btn btn-primary mr-2" id="create-gantt-btn">Создать диаграмму Ганта</button>' +
+                            '<button type="button" class="btn btn-primary" id="create-roadmap-btn">Создать RoadMap</button>' +
+                            '</div>');
+
+                        // Добавляем обработчики событий для кнопок
+                        $('#add-info-btn').click(function(){
+                            // Обработчик для кнопки "Добавить информацию"
+                            // Отправляем запрос на соответствующий APIView
+                            $.post('/add_info/', function(data){
+                                // Обновляем контейнер с сообщениями
+                                $('#chat-response').append('<div class="message bot-message">' + data + '</div>');
+                            });
+                        });
+
+                        $('#create-gantt-btn').click(function(){
+                            $.post('/ai_mockup/create_gantt/', function(data){
+                                $('#chat-response').append('<div class="message bot-message">' + data + '</div>');
+                            });
+                        });
+
+                        $('#create-roadmap-btn').click(function(){
+                            $.post('/ai_mockup/create_roadmap/', function(data){
+                                $('#chat-response').append('<div class="message bot-message">' + data + '</div>');
+                            });
+                        });
+                    }
+                }, 20); // Интервал отображения символов (1 мс)
+            },
+            error: function(xhr, status, error){
+                console.error(xhr.responseText);
+                
+                
+            }
+        });
+    });
+    function csrfSafeMethod(method) {
+        // эти методы безопасны для отправки без CSRF токена
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+});
+
+
+
+    function goBack() {
+        window.history.back();
+    }
+
+</script>
+</body>
+</html>
